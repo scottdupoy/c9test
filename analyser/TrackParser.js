@@ -39,6 +39,7 @@ method.parseTrackData = function(data, callback) {
 
         previousPoint = point;
     });
+    console.log('TOTAL DISTANCE: ' + totalDistance);
 
     callback(null, track);
 };
