@@ -4,7 +4,21 @@ var method = GeometryTools.prototype;
 function GeometryTools() {
 };
 
-method.distanceBetweenPointsInKm = function(p1, p2) {
+method.distanceBetweenPointsInKm = distanceBetweenPointsInKm;
+
+method.findIntermediatePoint = function(start, end, ratio) {
+    var intermediatePoint = {
+        time: start.time + ratio * (end.time - start.time),
+        lat: start.lat + ratio * (end.lat - start.lat),
+        lon: start.lon + ratio * (end.lon - start.lon),
+        ele: start.ele + ratio * (end.ele - start.ele),
+        hr: Math.max(start.hr, end.hr),
+    };
+    intermediatePoint.trackPositionInKm = start.trackPositionInKm + distanceBetweenPointsInKm(start, intermediatePoint);
+    return intermediatePoint;
+}
+
+function distanceBetweenPointsInKm(p1, p2) {
     var radiusKm = 6371;
     var latDiff = convertDegreesToRadians(p2.lat - p1.lat);
     var lonDiff = convertDegreesToRadians(p2.lon - p1.lon);
