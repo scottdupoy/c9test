@@ -6,8 +6,9 @@ function TrackParser() {
 };
 
 method.parseTrackData = function(data, callback) {
-    var geometryTools = new GeometryTools();
+    console.log('Parsing');
 
+    var geometryTools = new GeometryTools();
     var track = { };
 
     track.time = new Date(Date.parse(data['gpx']['metadata'][0]['time'][0]));
@@ -39,7 +40,6 @@ method.parseTrackData = function(data, callback) {
 
         previousPoint = point;
     });
-    console.log('TOTAL DISTANCE: ' + totalDistance);
 
     callback(null, track);
 };

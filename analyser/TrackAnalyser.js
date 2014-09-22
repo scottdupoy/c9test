@@ -6,6 +6,8 @@ function TrackAnalyser() {
 };
 
 method.analyseTrack = function(track, targets) {
+    console.log('Analysing');
+
     var analysis = {
         track: track,
         bestEfforts: { },
@@ -18,9 +20,10 @@ method.analyseTrack = function(track, targets) {
         analysis.end = targetAnalysis.end;
         analysis.duration = targetAnalysis.duration;
         analysis.distanceInKm = targetAnalysis.distanceInKm;
+        analysis.distanceInMiles = targetAnalysis.distanceInMiles;
 
         if (targetAnalysis.bestEffort != null) {
-            analysis[target] = targetAnalysis.bestEffort;
+            analysis.bestEfforts[target] = targetAnalysis.bestEffort;
         }
     });
 
@@ -28,6 +31,7 @@ method.analyseTrack = function(track, targets) {
 };
 
 function analyse(track, target) {
+    console.log('Analysing target: ' + target);
     var geometryTools = new GeometryTools();
 
     var totalDistanceInKm = 0.0;
@@ -41,6 +45,7 @@ function analyse(track, target) {
 
     var previousPoint = track.points[0];
     var inTargetWindow = false;
+    var intermediatePoint = { };
 
     for (var index = 1; index < track.points.length; ) {
         // walk index forward but note that it might be moved backwards again
@@ -49,7 +54,7 @@ function analyse(track, target) {
         index++;
 
         var proposedDelta = {
-            duration: nextPoint.time - previousPoint.time,
+            duration: nextPoint.time.getTime() - previousPoint.time.getTime(),
             distanceInKm: geometryTools.distanceBetweenPointsInKm(previousPoint, nextPoint),
             start: previousPoint,
             end: nextPoint,
@@ -64,11 +69,11 @@ function analyse(track, target) {
             inTargetWindow = true;
 
             // about to reach (or breach) the target for the first time, therefore want to split the new delta to fit exactly
-            if ((proposedDelta.DistanceInKm + currentRunningTotal) > target)
+            if ((proposedDelta.distanceInKm + currentRunningTotal) > target)
             {
-                var intermediatePoint = geometryTools.findIntermediatePoint(proposedDelta.start, proposedDelta.end, (target - currentRunningTotal) / proposedDelta.distanceInKm);
+                intermediatePoint = geometryTools.findIntermediatePoint(proposedDelta.start, proposedDelta.end, (target - currentRunningTotal) / proposedDelta.distanceInKm);
                 proposedDelta = {
-                    duration: intermediatePoint.time - previousPoint.time,
+                    duration: intermediatePoint.time.getTime() - previousPoint.time.getTime(),
                     distanceInKm: target - currentRunningTotal,
                     start: proposedDelta.start,
                     end: intermediatePoint,
@@ -82,10 +87,10 @@ function analyse(track, target) {
             if (proposedDelta.distanceInKm < earliestDelta.distanceInKm)
             {
                 // split the earliest delta and add use the proposed one at the end
-                var intermediatePoint = geometryTools.findIntermediatePoint(earliestDelta.start, earliestDelta.end, proposedDelta.distanceInKm / earliestDelta.distanceInKm);
+                intermediatePoint = geometryTools.findIntermediatePoint(earliestDelta.start, earliestDelta.end, proposedDelta.distanceInKm / earliestDelta.distanceInKm);
                 deltas[0] =
                 {
-                    duration: earliestDelta.end.time - intermediatePoint.time,
+                    duration: earliestDelta.end.time.getTime() - intermediatePoint.time.getTime(),
                     distanceInKm: earliestDelta.distanceInKm - proposedDelta.distanceInKm,
                     start: intermediatePoint,
                     end: earliestDelta.end,
@@ -100,9 +105,9 @@ function analyse(track, target) {
             {
                 // remove the earliest and split the proposed one
                 deltas.splice(0, 1);
-                var intermediatePoint = geometryTools.findIntermediatePoint(proposedDelta.start, proposedDelta.end, earliestDelta.distanceInKm / proposedDelta.distanceInKm);
+                intermediatePoint = geometryTools.findIntermediatePoint(proposedDelta.start, proposedDelta.end, earliestDelta.distanceInKm / proposedDelta.distanceInKm);
                 proposedDelta = {
-                    duration: intermediatePoint.time - proposedDelta.start.time,
+                    duration: intermediatePoint.time.getTime() - proposedDelta.start.time.getTime(),
                     distanceInKm: earliestDelta.distanceInKm,
                     start: proposedDelta.start,
                     end: intermediatePoint,
@@ -126,6 +131,7 @@ function analyse(track, target) {
 
             var effort = {
                 distanceInKm: deltaDistance,
+                distanceInMiles: deltaDistance / 1.609344,
                 duration: 0.0,
                 points: [ ],
             };
@@ -144,8 +150,9 @@ function analyse(track, target) {
         bestEffort: null,
         start: deltas[0].time,
         end: deltas[deltas.length - 1].end.time,
-        duration: previousPoint.time - track.points[0].time,
+        duration: previousPoint.time.getTime() - track.points[0].time.getTime(),
         distanceInKm: totalDistanceInKm,
+        distanceInMiles: totalDistanceInKm / 1.609344,
     };
 
     // may be null

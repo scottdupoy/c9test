@@ -8,7 +8,7 @@ method.distanceBetweenPointsInKm = distanceBetweenPointsInKm;
 
 method.findIntermediatePoint = function(start, end, ratio) {
     var intermediatePoint = {
-        time: start.time + ratio * (end.time - start.time),
+        time: new Date(start.time.getTime() + ratio * (end.time.getTime() - start.time.getTime())),
         lat: start.lat + ratio * (end.lat - start.lat),
         lon: start.lon + ratio * (end.lon - start.lon),
         ele: start.ele + ratio * (end.ele - start.ele),
@@ -16,6 +16,14 @@ method.findIntermediatePoint = function(start, end, ratio) {
     };
     intermediatePoint.trackPositionInKm = start.trackPositionInKm + distanceBetweenPointsInKm(start, intermediatePoint);
     return intermediatePoint;
+}
+
+method.calculatePace = function(duration, distanceInKm, paceUnits) {
+    var pace = duration / distanceInKm;
+    if (paceUnits == 'M') {
+        pace *= 1.609344;
+    }
+    return pace;
 }
 
 function distanceBetweenPointsInKm(p1, p2) {
